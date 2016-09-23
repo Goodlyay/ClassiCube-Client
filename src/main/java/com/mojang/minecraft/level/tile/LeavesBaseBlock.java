@@ -18,7 +18,7 @@ public class LeavesBaseBlock extends Block {
 
     @Override
     public final boolean isOpaque() {
-        return false;
+        return true;
     }
 
     @Override

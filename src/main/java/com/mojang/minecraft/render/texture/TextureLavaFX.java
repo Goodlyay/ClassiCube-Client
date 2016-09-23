@@ -1,14 +1,15 @@
 package com.mojang.minecraft.render.texture;
 
 import com.mojang.minecraft.level.tile.Block;
+//import com.mojang.util.LogUtil;
 import com.mojang.util.MathHelper;
 
 public final class TextureLavaFX extends TextureFX {
 
-    private float[] red = new float[256];
-    private float[] green = new float[256];
-    private float[] blue = new float[256];
-    private float[] alpha = new float[256];
+    //private float[] red = new float[256];
+    private float[] soupHeat = new float[256];
+    private float[] potHeat = new float[256];
+    private float[] flameHeat = new float[256];
 
     public TextureLavaFX() {
         super(Block.LAVA.textureId);
@@ -16,65 +17,83 @@ public final class TextureLavaFX extends TextureFX {
 
     @Override
     public final void animate() {
-        int var1;
-        int var2;
-        float var3;
-        int var5;
-        int var6;
-        int var7;
-        int var8;
-        int var9;
-        for (var1 = 0; var1 < 16; ++var1) {
-            for (var2 = 0; var2 < 16; ++var2) {
-                var3 = 0F;
-                int var4 = (int) (MathHelper.sin(var2 * (float) Math.PI * 2F / 16F) * 1.2F);
-                var5 = (int) (MathHelper.sin(var1 * (float) Math.PI * 2F / 16F) * 1.2F);
-
-                for (var6 = var1 - 1; var6 <= var1 + 1; ++var6) {
-                    for (var7 = var2 - 1; var7 <= var2 + 1; ++var7) {
-                        var8 = var6 + var4 & 15;
-                        var9 = var7 + var5 & 15;
-                        var3 += red[var8 + (var9 << 4)];
+        int col;
+        int row;
+        int neighborhoodCol;
+        int neighborhoodRow;
+        for (col = 0; col < 16; ++col) {
+            for (row = 0; row < 16; ++row) {
+                float localSoupHeat = 0F;
+              //goes through a full sin wave across the columns of the texture, 22.5 degrees per pixel.
+                int rowSin = (int) (MathHelper.sin(row * (float) Math.PI * 2F / 16F) * 1.2F);
+              // goes through a full sin wave down the rows of the texture, 22.5 degrees per pixel.
+                int colSin = (int) (MathHelper.sin(col * (float) Math.PI * 2F / 16F) * 1.2F);
+                
+                
+                //calculates a seed for the current spot equal to the sum of itself and its neighbors.
+                for (neighborhoodCol = col - 1; neighborhoodCol <= col + 1; ++neighborhoodCol) {
+                    for (neighborhoodRow = row - 1; neighborhoodRow <= row + 1; ++neighborhoodRow) {
+                    	//for each spot
+                    	//there is 3x3 area around that spot
+                    	//that area is offset horizontally by the first four bits of rowSin
+                    	//that area is offset vertically by the first four bits of colSin
+                        int shiftedCol = neighborhoodCol + rowSin & 15;
+                        int shiftedRow = neighborhoodRow + colSin & 15;
+                        localSoupHeat += soupHeat[shiftedCol + (shiftedRow << 4)];
                     }
                 }
-
-                green[var1 + (var2 << 4)] = var3 / 10F
-                        + (blue[(var1 & 15) + ((var2 & 15) << 4)]
-                        + blue[(var1 + 1 & 15) + ((var2 & 15) << 4)]
-                        + blue[(var1 + 1 & 15) + ((var2 + 1 & 15) << 4)] + blue[(var1 & 15)
-                        + ((var2 + 1 & 15) << 4)]) / 4F * 0.8F;
-                blue[var1 + (var2 << 4)] += alpha[var1 + (var2 << 4)] * 0.01F;
-                if (blue[var1 + (var2 << 4)] < 0F) {
-                    blue[var1 + (var2 << 4)] = 0F;
+                
+                //Sum of 2x2 grid of potHeat with top left corner as current spot
+                float localPotHeat =
+                		  potHeat[(col) + ((row) << 4)]
+        				+ potHeat[(col + 1 & 15) + ((row) << 4)]
+        				+ potHeat[(col + 1 & 15) + ((row + 1 & 15) << 4)]
+        				+ potHeat[(col & 15) + ((row + 1 & 15) << 4)];
+                
+                
+                soupHeat[col + (row << 4)] = localSoupHeat / 10F + (localPotHeat / 4F * 0.8F);
+                
+                potHeat[col + (row << 4)] += flameHeat[col + (row << 4)] * 0.01F;
+                
+                if (potHeat[col + (row << 4)] < 0F) {
+                    potHeat[col + (row << 4)] = 0F;
                 }
 
-                alpha[var1 + (var2 << 4)] -= 0.06F;
+                flameHeat[col + (row << 4)] -= 0.06F;
                 if (Math.random() < 0.005D) {
-                    alpha[var1 + (var2 << 4)] = 1.5F;
+                    flameHeat[col + (row << 4)] = 1.5F;
                 }
             }
         }
-
-        float[] var10 = green;
-        green = red;
-        red = var10;
-
-        for (var2 = 0; var2 < 256; ++var2) {
-            if ((var3 = red[var2] * 2F) > 1F) {
-                var3 = 1F;
+        
+        //swap the arrays so it can use the previous result in the next frame's calculation
+        //float[] var10 = green;
+        //green = red;
+        //red = var10; JUST KIDDING
+        
+        //red = green;
+        
+        
+        //take the colorSeed for each place in the array, double it, clamp between 0 and 1 inclusive.
+        for (row = 0; row < 256; ++row) {
+        	float colorHeat;
+        	
+            if ((colorHeat = soupHeat[row] * 2F) > 1F) {
+            	colorHeat = 1F;
             }
 
-            if (var3 < 0F) {
-                var3 = 0F;
+            if (colorHeat < 0F) {
+            	colorHeat = 0F;
             }
 
-            var5 = (int) (var3 * 100F + 155F);
-            var6 = (int) (var3 * var3 * 255F);
-            var7 = (int) (var3 * var3 * var3 * var3 * 128F);
-            textureData[var2 << 2] = (byte) var5;
-            textureData[(var2 << 2) + 1] = (byte) var6;
-            textureData[(var2 << 2) + 2] = (byte) var7;
-            textureData[(var2 << 2) + 3] = -1;
+            int rColor = (int) (colorHeat * 100F + 155F);
+            int gColor = (int) (colorHeat * colorHeat * 255F);
+            int bColor = (int) (colorHeat * colorHeat * colorHeat * colorHeat * 128F);
+            //set the texture data to the red green and blue and alpha
+            textureData[row << 2] = (byte) rColor;
+            textureData[(row << 2) + 1] = (byte) gColor;
+            textureData[(row << 2) + 2] = (byte) bColor;
+            textureData[(row << 2) + 3] = -1;
         }
     }
 }

@@ -24,6 +24,7 @@ public class ShapeRenderer {
     private double textureU;
     private double textureV;
     private int color;
+    private int colorShadow;
     private boolean hasColor;
     private boolean hasTexture;
     private boolean hasNormals;

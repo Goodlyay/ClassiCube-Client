@@ -96,24 +96,50 @@ public class Level implements Serializable {
         }
     }
 
-    public void calcLightDepths(int var1, int var2, int var3, int var4) {
-        for (int x = var1; x < var1 + var3; ++x) {
-            for (int z = var2; z < var2 + var4; ++z) {
-                int var7 = blockers[x + z * width];
+    public void calcLightDepths(int xStart, int zStart, int xWidth, int zDepth) { //flag1
+    	//if (xWidth > 0){
+        //	return;	
+    	//}
 
-                int y = height - 1;
-                while (y > 0 && !isLightBlocker(x, y, z)) {
-                    --y;
+    	xStart += height;
+    	if (xWidth == width) {
+    		xWidth += height;
+    		xStart -= height;
+    	}
+    	int widthRow = width + height;
+        for (int x = xStart; x < xStart + xWidth; ++x) {
+            for (int z = zStart; z < zStart + zDepth; ++z) {
+                int oldY = blockers[x + z * widthRow];
+ 
+                int y = height -1;
+                int xD = x + height -1;
+                if (xD >= widthRow) {
+                	int xOver = xD - (widthRow -1);
+                	y -= xOver;
+                	xD -= xOver;
                 }
-
-                blockers[x + z * width] = y;
-                if (var7 != y) {
-                    int var9 = var7 < y ? var7 : y;
-                    var7 = var7 > y ? var7 : y;
-
-                    for (y = 0; y < listeners.size(); ++y) {
-                        listeners.get(y).queueChunks(x - 1, var9 - 1, z - 1, x + 1,
-                                var7 + 1, z + 1);
+                xD -= height;
+                while (y > 0 && xD >= 0 && xD < width && !isLightBlocker(xD , y, z)) {
+                    --y;
+                    --xD;
+                }
+                if (xD < 0) {
+                	y = oldY;
+                }
+                //System.out.println("blockers[ x =" + x + " z =" + z + "] =" + y);
+                blockers[x + z * widthRow] = y; //blockers becomes y
+                if (oldY != y && x >= height) { //
+                	int xQ = x -height;
+                    int yMin = oldY < y ? oldY : y; //if blockers1 is less than y, input blockers1, otherwise input y
+                    int yMax = oldY > y ? oldY : y;
+                    if (xQ < 0 || xQ >= width) {
+                    	yMax = yMin;
+                    }
+                    else {
+	                    for (int i = 0; i < listeners.size(); ++i) {
+	                        listeners.get(i).queueChunks(xQ - 1, yMin - 1, z - 1, xQ + 1, yMax + 1, z + 1);
+	                        //listeners.get(i).queueChunks(0 - 1, 0 - 1, 0 - 1, width + 1, height + 1, length + 1);
+	                    }
                     }
                 }
             }
@@ -531,8 +557,22 @@ public class Level implements Serializable {
         }
 
         return null;
+       
     }
-
+    
+    public ColorCache getShadowColor() {
+        if (customShadowColor != null) {
+            return customShadowColor;
+        }
+        return defaultShadowColor;
+    }
+    public ColorCache getLightColor() {
+        if (customLightColor != null) {
+            return customLightColor;
+        }
+        return defaultLightColor;
+    }
+    
     public float getBrightness(int x, int y, int z) {
         return isLit(x, y, z) ? 1F : 0.6F;
     }
@@ -739,8 +779,8 @@ public class Level implements Serializable {
             throw new RuntimeException("The level is corrupt!");
         } else {
             listeners.clear();
-            blockers = new int[width * length];
-            Arrays.fill(blockers, height);
+            blockers = new int[(width + height) * length];
+            Arrays.fill(blockers, 0); //height
             calcLightDepths(0, 0, width, length);
             random = new Random();
             randId = random.nextInt();
@@ -788,7 +828,7 @@ public class Level implements Serializable {
 
     public boolean isLit(int x, int y, int z) {
         return !(x >= 0 && y >= 0 && z >= 0 && x < width && y < height
-                && z < length) || y >= blockers[x + z * width];
+                && z < length) || y >= blockers[(x +height -y) + z * (width + height)]; //flag2
     }
 
     private boolean isSolid(float x, float y, float z) {
@@ -915,11 +955,18 @@ public class Level implements Serializable {
                     Block.blocks[tile].onAdded(this, x, y, z);
                 }
 
-                calcLightDepths(x, z, 1, 1);
-
+                //for (int d = y; d > 0; --d) {
+	                //calcLightDepths(x -y, z, 2, 1);
+                	//calcLightDepths(0, 0, width, length);
+                	calcLightDepths(x -y, z, 1, 1);
+               // }
                 for (tile = 0; tile < listeners.size(); ++tile) {
-                    listeners.get(tile).queueChunks(x - 1, y - 1, z - 1, x + 1,
-                            y + 1, z + 1);
+                    //listeners.get(tile).queueChunks(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1);
+                	int xi;
+                	int yi;
+                	for ( xi = x,  yi = y; xi >= 0 && yi >= 0; --xi, --yi) {
+                		listeners.get(tile).queueChunks(xi - 1, yi - 1, z - 1, xi + 1, yi + 1, z + 1);
+                	}
                 }
 
                 return true;
@@ -973,8 +1020,8 @@ public class Level implements Serializable {
         this.length = length;
         this.height = height;
         blocks = blockArray;
-        blockers = new int[width * length];
-        Arrays.fill(blockers, this.height);
+        blockers = new int[(width + height) * length];
+        Arrays.fill(blockers, 0); //this.height
         calcLightDepths(0, 0, width, length);
 
         for (width = 0; width < listeners.size(); ++width) {

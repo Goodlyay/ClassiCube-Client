@@ -18,6 +18,7 @@ import com.mojang.util.IntersectionHelper;
 import com.mojang.util.Vec3D;
 
 public class Block {
+    public ColorCache customShadowColor;
     public static final Block[] blocks = new Block[256];
     public static final boolean[] physics = new boolean[256];
     public static final boolean[] liquid = new boolean[256];
@@ -166,6 +167,9 @@ public class Block {
             .setTextureId(53).setParticleGravity(1F).setHardness(0.8F);
     public static final Block STONEBRICK = new Block(65).setStepSound(soundStoneFootstep)
             .setTextureId(52).setParticleGravity(1F).setHardness(0.8F);
+    
+    
+    
     protected static Random random = new Random();
     public final int id;
     public StepSound stepSound;
@@ -416,48 +420,58 @@ public class Block {
 
     public boolean render(Level level, int x, int y, int z, ShapeRenderer shapeRenderer) {
         boolean rendered = false;
-        float var7 = 0.5F;
-        float var8 = 0.8F;
-        float var9 = 0.6F;
+
+        //ColorCache dC = new ColorCache(lC.R -sC.R, lC.G -sC.G, lC.B -sC.B);
+        float bottomColor = 0.6F;
+        float zColor1 = 0.3F;
+        float zColor2 = 0.3F;
+        
+        float xColor1 = 0.5F;
+        float xColor2 = 0.8F; //positive X side
+        ColorCache shC = level.getShadowColor();
+        ColorCache sC = new ColorCache(shC.R * bottomColor, shC.G * bottomColor, shC.B * bottomColor);
+
+        //ColorCache lC = level.getLightColor();
+        
         ColorCache colorCache;
-        if (canRenderSide(level, x, y - 1, z, 0)) {
-            colorCache = getBrightness(level, x, y - 1, z);
-            shapeRenderer.color(var7 * colorCache.R, var7 * colorCache.G, var7 * colorCache.B);
+        if (canRenderSide(level, x, y - 1, z, 0)) { //bottom
+            //level.getShadowColor();
+            shapeRenderer.color(sC.R, sC.G, sC.B);
             renderInside(shapeRenderer, x, y, z, 0);
             rendered = true;
         }
 
-        if (canRenderSide(level, x, y + 1, z, 1)) {
-            colorCache = getBrightness(level, x, y + 1, z);
+        if (canRenderSide(level, x, y + 1, z, 1)) { //top
+            colorCache = getBrightness(level, x, y, z);
             shapeRenderer.color(colorCache.R * 1F, colorCache.G * 1F, colorCache.B * 1F);
             renderInside(shapeRenderer, x, y, z, 1);
             rendered = true;
         }
 
-        if (canRenderSide(level, x, y, z - 1, 2)) {
+        if (canRenderSide(level, x, y, z - 1, 2)) { //Negative z side
             colorCache = getBrightness(level, x, y, z - 1);
-            shapeRenderer.color(var8 * colorCache.R, var8 * colorCache.G, var8 * colorCache.B);
+            shapeRenderer.color(sC.R + zColor1 * (colorCache.R - sC.R), sC.G + zColor1 * (colorCache.G - sC.G), sC.B + zColor1 * (colorCache.B - sC.B));
             renderInside(shapeRenderer, x, y, z, 2);
             rendered = true;
         }
 
-        if (canRenderSide(level, x, y, z + 1, 3)) {
+        if (canRenderSide(level, x, y, z + 1, 3)) { //positive z side
             colorCache = getBrightness(level, x, y, z + 1);
-            shapeRenderer.color(var8 * colorCache.R, var8 * colorCache.G, var8 * colorCache.B);
+            shapeRenderer.color(sC.R + zColor2 * (colorCache.R - sC.R), sC.G + zColor2 * (colorCache.G - sC.G), sC.B + zColor2 * (colorCache.B - sC.B));
             renderInside(shapeRenderer, x, y, z, 3);
             rendered = true;
         }
 
-        if (canRenderSide(level, x - 1, y, z, 4)) {
-            colorCache = getBrightness(level, x - 1, y, z);
-            shapeRenderer.color(var9 * colorCache.R, var9 * colorCache.G, var9 * colorCache.B);
+        if (canRenderSide(level, x - 1, y, z, 4)) { //negative X side
+            colorCache = getBrightness(level, x - 1, y -1, z);
+            shapeRenderer.color(sC.R + xColor1 * (colorCache.R - sC.R), sC.G + xColor1 * (colorCache.G - sC.G), sC.B + xColor1 * (colorCache.B - sC.B));
             renderInside(shapeRenderer, x, y, z, 4);
             rendered = true;
         }
 
-        if (canRenderSide(level, x + 1, y, z, 5)) {
-            colorCache = getBrightness(level, x + 1, y, z);
-            shapeRenderer.color(var9 * colorCache.R, var9 * colorCache.G, var9 * colorCache.B);
+        if (canRenderSide(level, x + 1, y, z, 5)) { //positive X side
+            colorCache = getBrightness(level, x, y, z);
+            shapeRenderer.color(sC.R + xColor2 * (colorCache.R - sC.R), sC.G + xColor2 * (colorCache.G - sC.G), sC.B + xColor2 * (colorCache.B - sC.B));
             renderInside(shapeRenderer, x, y, z, 5);
             rendered = true;
         }

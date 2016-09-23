@@ -100,6 +100,14 @@ import com.mojang.util.Vec3D;
 import com.oyasunadev.mcraft.client.util.Constants;
 import java.security.NoSuchAlgorithmException;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+
+import com.mojang.util.LogUtil;
+import com.mojang.util.StreamingUtil;
+
 public final class Minecraft implements Runnable {
 
     // mouse button index constants
@@ -562,7 +570,7 @@ public final class Minecraft implements Runnable {
                 return;
             }
 
-            if (session == null) {
+            //if (session == null) {
                 // Singleplayer-only snow behavior code.
                 Block toCheck = Block.blocks[level.getTile(x, y - 1, z)];
                 if (toCheck != null && toCheck.id > 0 && (toCheck == Block.SNOW)
@@ -578,7 +586,7 @@ public final class Minecraft implements Runnable {
                         y -= 1;
                     }
                 }
-            }
+            //}
             if(!level.isInBounds(x, y, z)){
                 return;
             }
@@ -1333,33 +1341,29 @@ public final class Minecraft implements Runnable {
                                 * delta;
                         player = heldBlock.minecraft.player;
                         GL11.glPushMatrix();
-                        GL11.glRotatef(player.xRotO + (player.xRot - player.xRotO) * delta, 1F, 0F,
-                                0F);
-                        GL11.glRotatef(player.yRotO + (player.yRot - player.yRotO) * delta, 0F, 1F,
-                                0F);
+                        GL11.glRotatef(player.xRotO + (player.xRot - player.xRotO) * delta, 1F, 0F,0F);
+                        GL11.glRotatef(player.yRotO + (player.yRot - player.yRotO) * delta, 0F, 1F,0F);
                         heldBlock.minecraft.renderer.setLighting(true);
                         GL11.glPopMatrix();
                         GL11.glPushMatrix();
                         var69 = 0.8F;
                         if (heldBlock.moving) {
-                            var33 = MathHelper
-                                    .sin((var74 = (heldBlock.offset + delta) / 7F) * (float) Math.PI);
-                            GL11.glTranslatef(
-                                    -MathHelper.sin(MathHelper.sqrt(var74) * (float) Math.PI) * 0.4F,
-                                    MathHelper.sin(MathHelper.sqrt(var74) * (float) Math.PI * 2F) * 0.2F,
-                                    -var33 * 0.2F);
+                            var33 = MathHelper.sin((var74 = (heldBlock.offset + delta) / 7F) * (float) Math.PI);
+                            GL11.glTranslatef(-MathHelper.sin(MathHelper.sqrt(var74) * (float) Math.PI) * 0.4F,MathHelper.sin(MathHelper.sqrt(var74) * (float) Math.PI * 2F) * 0.2F, -var33 * 0.2F);
                         }
 
-                        GL11.glTranslatef(0.7F * var69, -0.65F * var69 - (1F - var117) * 0.6F,
-                                -0.9F * var69);
+                        GL11.glTranslatef(0.7F * var69,     -0.65F * var69 - (1F - var117) * 0.6F,     -0.9F * var69);
+                        //GL11.glTranslatef(0.7F * var69,     -0.65F * var69 - 0 * 0.6F,     -0.9F * var69);
+                        //GL11.glTranslatef(0.56f,     -0.52F,     -0.72f);
+                        //TODO
+                        //LogUtil.logInfo("what is" + var117 + "?");
+                        
                         GL11.glRotatef(45F, 0F, 1F, 0F);
                         GL11.glEnable(GL11.GL_NORMALIZE);
                         if (heldBlock.moving) {
                             var33 = MathHelper.sin((var74 = (heldBlock.offset + delta) / 7F)
                                     * var74 * (float) Math.PI);
-                            GL11.glRotatef(
-                                    MathHelper.sin(MathHelper.sqrt(var74) * (float) Math.PI) * 80F, 0F,
-                                    1F, 0F);
+                            GL11.glRotatef(MathHelper.sin(MathHelper.sqrt(var74) * (float) Math.PI) * 80F, 0F,1F, 0F);
                             GL11.glRotatef(-var33 * 20F, 1F, 0F, 0F);
                         }
 
@@ -1376,16 +1380,18 @@ public final class Minecraft implements Runnable {
                                 heldBlock.block.renderPreview(shapeRenderer);
                             }
                         } else {
-                            player.bindTexture(heldBlock.minecraft.textureManager);
-                            GL11.glScalef(1F, -1F, -1F);
-                            GL11.glTranslatef(0F, 0.2F, 0F);
-                            GL11.glRotatef(-120F, 0F, 0F, 1F);
-                            ModelPart leftArm = heldBlock.minecraft.player.getModel().leftArm;
-                            if (!leftArm.hasList) {
-                                leftArm.generateList(0.0625F); // 1/16
-                            }
-
-                            GL11.glCallList(leftArm.list);
+                        	if (settings.thirdPersonMode == ThirdPersonMode.NONE && canRenderGUI) {
+			                    player.bindTexture(heldBlock.minecraft.textureManager);
+			                    GL11.glScalef(1F, -1F, -1F);
+			                    GL11.glRotatef(-180F, 0.5F, 0.5F, 1F);
+			                    GL11.glTranslatef(0F, -0.2F, 0F);
+			                    ModelPart leftArm = heldBlock.minecraft.player.getModel().rightArm;
+			                    if (!leftArm.hasList) {
+			                        leftArm.generateList(0.0625F); // 1/16
+			                    }
+			
+			                    GL11.glCallList(leftArm.list);
+                        	}
                         }
 
                         GL11.glDisable(GL11.GL_NORMALIZE);
@@ -1926,7 +1932,7 @@ public final class Minecraft implements Runnable {
                     }
                     if (currentScreen == null) {
                         if (Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
-                            if (!packetHandler.isLoadingLevel || !isOnline()){
+                            if (!packetHandler.isLoadingLevel){
                                 pause();
                             } else {
                                 Mouse.setGrabbed(false);

@@ -55,13 +55,25 @@ public final class Renderer {
         float newBob = player.oBob + (player.bob - player.oBob) * delta;
         float newTilt = player.oTilt + (player.tilt - player.oTilt) * delta;
         if (isEnabled) {
-            GL11.glTranslatef(MathHelper.sin(var2 * (float) Math.PI) * newBob * 0.5F,
-                    -Math.abs(MathHelper.cos(var2 * (float) Math.PI) * newBob), 0F);
+            GL11.glTranslatef(MathHelper.sin(var2 * (float) Math.PI) * newBob * 0.5F, -Math.abs(MathHelper.cos(var2 * (float) Math.PI) * newBob), 0F);
+            
+        	//GL11.glTranslatef(0F, -Math.abs(MathHelper.cos(var2 * (float) Math.PI) * newBob), 0F); //FAKE
+            
             GL11.glRotatef(MathHelper.sin(var2 * (float) Math.PI) * newBob * 3F, 0F, 0F, 1F);
-            GL11.glRotatef(Math.abs(MathHelper.cos(var2 * (float) Math.PI + 0.2F) * newBob) * 5F, 1F,
-                    0F, 0F);
+            GL11.glRotatef(Math.abs(MathHelper.cos(var2 * (float) Math.PI + 0.2F) * newBob) * 5F, 1F,0F, 0F);
         }
         GL11.glRotatef(newTilt, 1F, 0F, 0F);
+        
+
+        //GL11.glRotatef(player.xRotO + (player.xRot - player.xRotO) * delta, 1F, 0F, 0F);
+        //GL11.glRotatef(player.yRotO + (player.yRot - player.yRotO) * delta, 0F, 1F, 0F);
+        
+        //GL11.glRotatef(0, 1F, 0F, 0F);
+        //GL11.glTranslatef(0F, 0F, -5F);
+        
+        //GL11.glRotatef(player.xRot, 1F, 0F, 0F);
+        //GL11.glTranslatef(0F, -0F, -5F);
+        
     }
 
     private FloatBuffer createBuffer(float var1, float var2, float var3, float var4) {
@@ -119,8 +131,8 @@ public final class Renderer {
             GL11.glEnable(GL11.GL_LIGHT0);
             GL11.glEnable(GL11.GL_COLOR_MATERIAL);
             GL11.glColorMaterial(GL11.GL_FRONT_AND_BACK, GL11.GL_AMBIENT_AND_DIFFUSE);
-            float ambientBrightness = 0.7F;
-            float diffuseBrightness = 0.3F;
+            float ambientBrightness = 1.0F;
+            float diffuseBrightness = 0.0F;
             Vec3D sunPosition = new Vec3D(0F, -1F, 0.5F).normalize();
             GL11.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION,
                     createBuffer(sunPosition.x, sunPosition.y, sunPosition.z, 0F));
@@ -269,7 +281,7 @@ public final class Renderer {
     public void drawWireframeBox(AABB aabb) {
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        GL11.glColor4f(0F, 0F, 0F, 0.4F);
+        GL11.glColor4f(0F, 0F, 0F, 1F);
         GL11.glLineWidth(2F);
         GL11.glDisable(GL11.GL_TEXTURE_2D);
         GL11.glDepthMask(false);

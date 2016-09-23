@@ -22,7 +22,7 @@ public final class GrassBlock extends Block {
         return side == 1 ? 0 : side == 0 ? 2 : 3;
     }
 
-    @Override
+    /**@Override
     public final void update(Level level, int x, int y, int z, Random rand) {
         if (rand.nextInt(4) == 0) {
             if (!level.isLit(x, y, z)) {
@@ -40,4 +40,5 @@ public final class GrassBlock extends Block {
             }
         }
     }
+    */
 }
